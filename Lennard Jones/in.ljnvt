@@ -1,0 +1,84 @@
+# 3-d, LJ sphere simulation
+
+#Initialization
+
+ units 			lj
+#units 			style - (real, lj, si, cgs)
+ dimension		3
+#dimension 	N
+ boundary		p p p 
+#boundary 		x y z (p p f)
+ neighbor		0.3 bin
+#neighbor 		skin style (skin = extra distance beyond force #cutoff (distance units))
+ neigh_modify	delay 5
+#neigh_modify 	keyword values ...(delay value = N
+  			#N = delay building until this many steps since #last build)
+ atom_style	atomic
+#atom_style 	style args (bond, angle, charge, dipole, full, #hybrid)
+echo 			both #(none or screen or log or both)
+
+# create geometry
+
+ lattice	fcc 0.0185
+ region		box block -15 15 -15 15 -15 15
+#region ID 	style args keyword arg
+ create_box	1 box
+#create_box 	N region-ID keyword value
+ create_atoms 	1 random 500 373892 NULL #units box
+#create_atoms 	type style args keyword values ...
+ group 		contact region box
+#group 		ID style args
+
+
+#create_atoms 	type style args keyword values ...
+
+
+mass		1 18
+
+# LJ potentials
+
+pair_style	lj/cut 2.5
+pair_coeff	* * 4 1.0 2.5 #(I J eps sigma cutoff1 cutoff2)
+#pair_coeff	1 1 4 1.0 2.5
+#pair_coeff	2 2 6 1.0 2.5
+#pair_coeff	1 2 4.89 1.0 2.5
+
+
+# initial velocities
+
+ velocity 	contact create 1.0 4928459 mom yes dist gaussian
+#velocity 	contact create 1.0 4928459 rot yes dist uniform
+#velocity 	group-ID style args keyword value
+ fix 		1 all nve
+#fix 		1 all nve
+#fix_modify 	fix-ID keyword value
+#fix_modify 	fix-ID keyword value
+ compute 1 all temp 
+#compute 1 all pressure temp ke pe
+
+#compute 	ID group-ID style args
+
+#compute	     	mobile ball temp
+#velocity     	ball create 100.0 482748 temp mobile
+#fix	     	1 ball nvt temp 100.0 185.0 100
+#fix_modify   	1 temp mobile
+
+timestep	0.005		
+thermo		10
+#thermo_modify	temp mobile
+
+dump		1 all atom 5 dump.lj
+
+run		1000
+
+unfix		1
+undump		1
+
+fix		2 all nvt temp 1.0 1.0 100.0
+timestep	0.005		
+thermo		10
+#thermo_modify	temp mobile
+
+dump		2 all atom 5 dump.lj1
+
+run		1000
